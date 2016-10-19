@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+from time import sleep
+from datetime import date
 import smtplib
 import requests
 import bs4
@@ -6,58 +9,105 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 
-# Set up the SMTP server
-smtpObj = smtplib.SMTP('smtp.gmail.com', 587)
-smtpObj.ehlo()
-smtpObj.starttls()
+def getImage(text):
+    soup = bs4.BeautifulSoup(text, "lxml")
+    imgTag = soup.select('#comic img')
+    image = {}
+    image['title'] = imgTag[0].get('alt')
+    image['url'] = 'http:{0}'.format(imgTag[0].get('src'))
+    image['text'] = imgTag[0].get('title')
+    return image
 
-# Get the username and password
-username = input("Username: ")
-password = input("Password: ")
-smtpObj.login(username, password)
 
-oldImgTitle = ''
+def buildMessage(username, image):
+    # Create the message
+    msg = MIMEMultipart()
+    msg['Subject'] = image['title']
+    msg['From'] = username
+    msg['To'] = username
+    text = MIMEText(image['text'])
+    imgFile = open(os.path.basename(image['url']), 'rb').read()
+    imageAttach = MIMEImage(imgFile, name=os.path.basename(image['url']))
+    msg.attach(imageAttach)
+    msg.attach(text)
+    return msg
 
-while (True):
+
+def sendComic(username, password, msg):
+    # Set up the SMTP server
+    smtpObj = smtplib.SMTP('smtp.gmail.com', 587)
+    smtpObj.ehlo()
+    smtpObj.starttls()
+    smtpObj.login(username, password)
+
+    # Send the message
+    smtpObj.send_message(msg)
+
+    # Close the SMTP connection
+    smtpObj.quit()
+
+
+def doEverything(username, password, oldImgTitle):
     # Get the page
     res = requests.get('http://xkcd.com')
 
     # Parse out the comic
-    soup = bs4.BeautifulSoup(res.text, "lxml")
-    imgTag = soup.select('#comic img')
+    image = getImage(res.text)
 
-    imgTitle = imgTag[0].get('alt')
-    if (imgTitle != oldImgTitle):
-        print("Got a new comic!")
-        print(imgTitle)
+    # Make sure we have a new image
+    while (image['title'] == oldImgTitle):
+        # Wait an hour, then try again
+        sleep(60 * 60)
 
-        # Reset the old title so that we only do this once
-        oldImgTitle = imgTitle
+        # Get the page
+        res = requests.get('http://xkcd.com')
 
-        # Get the image and mouseover text
-        imgUrl = 'http:{0}'.format(imgTag[0].get('src'))
-        imgMouseove = imgTag[0].get('title')
+        # Parse out the comic
+        image = getImage(res.text)
 
-        # Download the image
-        res = requests.get(imgUrl)
-        imgFile = open(os.path.basename(imgUrl), 'wb')
-        for chunk in res.iter_content(100000):
-            imgFile.write(chunk)
-        imgFile.close()
+    print("Got a new comic!")
+    print(image['title'])
 
-        # Create the message
-        msg = MIMEMultipart()
-        msg['Subject'] = imgTitle
-        msg['From'] = username
-        msg['To'] = username
-        text = MIMEText(imgMouseove)
-        imgFile = open(os.path.basename(imgUrl), 'rb').read()
-        image = MIMEImage(imgFile, name=os.path.basename(imgUrl))
-        msg.attach(image)
-        msg.attach(text)
+    # Download the image
+    res = requests.get(image['url'])
+    imgFile = open(os.path.basename(image['url']), 'wb')
+    for chunk in res.iter_content(100000):
+        imgFile.write(chunk)
+    imgFile.close()
 
-        # Send the message
-        smtpObj.sendmail('Pi', username, msg.as_string())
+    # Create the message
+    message = buildMessage(username, image)
 
-        # Delete the old image
-        os.remove(os.path.basename(imgUrl))
+    # Send the comic
+    sendComic(username, password, message)
+
+    # Delete the old image
+    os.remove(os.path.basename(image['url']))
+
+    # Return the new image title
+    return image['title']
+
+
+def main():
+    # Get the username and password
+    username = input("Username: ")
+    password = input("Password: ")
+
+    oldImgTitle = ''
+    oldDay = 0
+
+    while (True):
+        curDay = date.today().isoweekday()
+        if curDay in [1, 3, 5] and curDay != oldDay:
+            # Save the current day
+            oldDay = curDay
+
+            # Do everything, then save the new image title
+            oldImgTitle = doEverything(username, password, oldImgTitle)
+        else:
+            # Otherwise, try again tomorrow
+            sleep(60*60*24)
+
+
+if __name__ == "__main__":
+    main()
