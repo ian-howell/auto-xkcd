@@ -96,17 +96,36 @@ def main():
     oldImgTitle = ''
     oldDay = 0
 
-    while (True):
-        curDay = date.today().isoweekday()
-        if curDay in [1, 3, 5] and curDay != oldDay:
-            # Save the current day
-            oldDay = curDay
+    try:
+        while (True):
+            curDay = date.today().isoweekday()
+            if curDay in [1, 3, 5] and curDay != oldDay:
+                # Save the current day
+                oldDay = curDay
 
-            # Do everything, then save the new image title
-            oldImgTitle = doEverything(username, password, oldImgTitle)
-        else:
-            # Otherwise, try again tomorrow
-            sleep(60*60*24)
+                # Do everything, then save the new image title
+                oldImgTitle = doEverything(username, password, oldImgTitle)
+            else:
+                # Otherwise, try again tomorrow
+                sleep(60*60*24)
+    except :
+        # Attempt to send a warning that everything broke
+        # Set up the SMTP server
+        smtpObj = smtplib.SMTP('smtp.gmail.com', 587)
+        smtpObj.ehlo()
+        smtpObj.starttls()
+        smtpObj.login(username, password)
+
+        msg = 'Subject: ERROR: auto-xkcd\n'
+        msg += 'Something went wrong with auto-xkcd.\n'
+
+        # Send the message
+        smtpObj.sendmail(username, username, msg)
+
+        # Close the SMTP connection
+        smtpObj.quit()
+
+
 
 
 if __name__ == "__main__":
