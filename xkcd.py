@@ -8,6 +8,7 @@ import os
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
+import json
 
 def getImage(text):
     soup = bs4.BeautifulSoup(text, "lxml")
@@ -19,13 +20,14 @@ def getImage(text):
     return image
 
 
-def buildMessage(username, image):
+def buildMessage(username, image, weather):
     # Create the message
     msg = MIMEMultipart()
     msg['Subject'] = image['title']
     msg['From'] = username
     msg['To'] = username
-    text = MIMEText(image['text'])
+    weather_message = '\n\nToday\'s weather:\n' + weather
+    text = MIMEText(image['text'] + '\n' + weather_message)
     imgFile = open(os.path.basename(image['url']), 'rb').read()
     imageAttach = MIMEImage(imgFile, name=os.path.basename(image['url']))
     msg.attach(imageAttach)
@@ -47,7 +49,24 @@ def sendComic(username, password, msg):
     smtpObj.quit()
 
 
+def kelv_to_fahr(temp):
+    return (temp - 273.15) * 1.8 + 32
+
+
+def get_weather():
+    r = requests.get('http://api.openweathermap.org/data/2.5/weather?id=4406282&APPID=d72e6d9498368991dd8d6a255023287c')
+    weather_data = json.loads(r.text)['main']
+
+    weather_string = ''
+    weather_string += 'Now : {0:.1f} \u00B0F\n'.format(kelv_to_fahr(weather_data['temp']))
+    weather_string += 'Low : {0:.1f} \u00B0F\n'.format(kelv_to_fahr(weather_data['temp_min']))
+    weather_string += 'High: {0:.1f} \u00B0F\n'.format(kelv_to_fahr(weather_data['temp_max']))
+
+    return weather_string
+
+
 def main():
+    get_weather()
     # Get the username and password
     username = input("Username: ")
     password = input("Password: ")
@@ -69,8 +88,11 @@ def main():
             imgFile.write(chunk)
         imgFile.close()
 
+        # Get Weather data for today
+        weather = get_weather()
+
         # Create the message
-        message = buildMessage(username, image)
+        message = buildMessage(username, image, weather)
 
         # Send the comic
         sendComic(username, password, message)
