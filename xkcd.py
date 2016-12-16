@@ -99,7 +99,7 @@ def main():
 
         # Delete the old image
         os.remove(os.path.basename(image['url']))
-    except :
+    except Exception as e:
         # Attempt to send a warning that everything broke
         # Set up the SMTP server
         smtpObj = smtplib.SMTP('smtp.gmail.com', 587)
@@ -109,6 +109,7 @@ def main():
 
         msg = 'Subject: ERROR: auto-xkcd\n'
         msg += 'Something went wrong with auto-xkcd.\n'
+        msg += 'Exception thrown: {}\n'.format(e)
 
         # Send the message
         smtpObj.sendmail(username, username, msg)
