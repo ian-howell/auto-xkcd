@@ -47,67 +47,36 @@ def sendComic(username, password, msg):
     smtpObj.quit()
 
 
-def doEverything(username, password, oldImgTitle):
-    # Get the page
-    res = requests.get('http://xkcd.com')
+def main():
+    # Get the username and password
+    username = input("Username: ")
+    password = input("Password: ")
 
-    # Parse out the comic
-    image = getImage(res.text)
-
-    # Make sure we have a new image
-    while (image['title'] == oldImgTitle):
-        # Wait an hour, then try again
-        sleep(60 * 60)
-
+    try:
         # Get the page
         res = requests.get('http://xkcd.com')
 
         # Parse out the comic
         image = getImage(res.text)
 
-    print("Got a new comic!")
-    print(image['title'])
+        print("Got a new comic!")
+        print(image['title'])
 
-    # Download the image
-    res = requests.get(image['url'])
-    imgFile = open(os.path.basename(image['url']), 'wb')
-    for chunk in res.iter_content(100000):
-        imgFile.write(chunk)
-    imgFile.close()
+        # Download the image
+        res = requests.get(image['url'])
+        imgFile = open(os.path.basename(image['url']), 'wb')
+        for chunk in res.iter_content(100000):
+            imgFile.write(chunk)
+        imgFile.close()
 
-    # Create the message
-    message = buildMessage(username, image)
+        # Create the message
+        message = buildMessage(username, image)
 
-    # Send the comic
-    sendComic(username, password, message)
+        # Send the comic
+        sendComic(username, password, message)
 
-    # Delete the old image
-    os.remove(os.path.basename(image['url']))
-
-    # Return the new image title
-    return image['title']
-
-
-def main():
-    # Get the username and password
-    username = input("Username: ")
-    password = input("Password: ")
-
-    oldImgTitle = ''
-    oldDay = 0
-
-    try:
-        while (True):
-            curDay = date.today().isoweekday()
-            if curDay in [1, 3, 5] and curDay != oldDay:
-                # Save the current day
-                oldDay = curDay
-
-                # Do everything, then save the new image title
-                oldImgTitle = doEverything(username, password, oldImgTitle)
-            else:
-                # Otherwise, try again tomorrow
-                sleep(60*60*24)
+        # Delete the old image
+        os.remove(os.path.basename(image['url']))
     except :
         # Attempt to send a warning that everything broke
         # Set up the SMTP server
@@ -124,9 +93,6 @@ def main():
 
         # Close the SMTP connection
         smtpObj.quit()
-
-
-
 
 if __name__ == "__main__":
     main()
