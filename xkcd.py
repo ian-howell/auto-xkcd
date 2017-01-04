@@ -27,6 +27,7 @@ def buildMessage(username, image, weather):
     msg['From'] = username
     msg['To'] = username
     weather_message = '\n\nToday\'s weather:\n' + weather
+
     text = MIMEText(image['text'] + '\n' + weather_message)
     imgFile = open(os.path.basename(image['url']), 'rb').read()
     imageAttach = MIMEImage(imgFile, name=os.path.basename(image['url']))
@@ -53,8 +54,8 @@ def kelv_to_fahr(temp):
     return (temp - 273.15) * 1.8 + 32
 
 
-def get_weather():
-    r = requests.get('http://api.openweathermap.org/data/2.5/weather?id=4406282&APPID=d72e6d9498368991dd8d6a255023287c')
+def get_weather(key):
+    r = requests.get('http://api.openweathermap.org/data/2.5/weather?id=4406282&APPID=' + key)
     weather_data = json.loads(r.text)['main']
 
     weather_string = ''
@@ -66,10 +67,10 @@ def get_weather():
 
 
 def main():
-    get_weather()
     # Get the username and password
     username = input("Username: ")
     password = input("Password: ")
+    api_key = input("API key: ")
 
     try:
         # Get the page
@@ -89,7 +90,7 @@ def main():
         imgFile.close()
 
         # Get Weather data for today
-        weather = get_weather()
+        weather = get_weather(api_key)
 
         # Create the message
         message = buildMessage(username, image, weather)
