@@ -26,9 +26,8 @@ def buildMessage(username, image, weather):
     msg['Subject'] = image['title']
     msg['From'] = username
     msg['To'] = username
-    weather_message = '\n\nToday\'s weather:\n' + weather
 
-    text = MIMEText(image['text'] + '\n' + weather_message)
+    text = MIMEText('\n' + image['text'] + '\n\n' + weather)
     imgFile = open(os.path.basename(image['url']), 'rb').read()
     imageAttach = MIMEImage(imgFile, name=os.path.basename(image['url']))
     msg.attach(imageAttach)
@@ -54,14 +53,13 @@ def kelv_to_fahr(temp):
     return (temp - 273.15) * 1.8 + 32
 
 
-def get_weather(key):
-    r = requests.get('http://api.openweathermap.org/data/2.5/weather?id=4406282&APPID=' + key)
-    weather_data = json.loads(r.text)['main']
+def get_weather(key, city_id):
+    r = requests.get('http://api.openweathermap.org/data/2.5/weather?id=' + city_id + '&APPID=' + key)
+    weather_data = json.loads(r.text)
 
-    weather_string = ''
-    weather_string += 'Now : {0:.1f} \u00B0F\n'.format(kelv_to_fahr(weather_data['temp']))
-    weather_string += 'Low : {0:.1f} \u00B0F\n'.format(kelv_to_fahr(weather_data['temp_min']))
-    weather_string += 'High: {0:.1f} \u00B0F\n'.format(kelv_to_fahr(weather_data['temp_max']))
+    city_name = weather_data['name']
+    current_temp = kelv_to_fahr(weather_data['main']['temp'])
+    weather_string = 'Current temperature in ' + city_name + ': {0:.1f} \u00B0F\n'.format(current_temp)
 
     return weather_string
 
@@ -71,6 +69,7 @@ def main():
     username = input("Username: ")
     password = input("Password: ")
     api_key = input("API key: ")
+    city_id = input("City ID: ")
 
     try:
         # Get the page
@@ -90,7 +89,7 @@ def main():
         imgFile.close()
 
         # Get Weather data for today
-        weather = get_weather(api_key)
+        weather = get_weather(api_key, city_id)
 
         # Create the message
         message = buildMessage(username, image, weather)
