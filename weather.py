@@ -24,3 +24,9 @@ def build_url(key, city):
     app_id = "APPID={}".format(key)
     base_url = "http://api.openweathermap.org/data/2.5/weather"
     return "{}?{}&{}".format(base_url, city_id, app_id)
+
+def format_weather(weather_info):
+    degree_char = '\u00B0'
+    formatted = "Current temperature in {}".format(weather_info['city'])
+    formatted += ": {:.1f} {}F\n".format(weather_info['temp'], degree_char)
+    return formatted
