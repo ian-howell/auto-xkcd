@@ -3,3 +3,5 @@
 
 # List of all cities monitered by OpenWeather by ID
 city_list.txt
+
+__pycache__/
