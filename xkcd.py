@@ -28,8 +28,9 @@ def buildMessage(username, image, weather):
     msg['To'] = username
 
     text = MIMEText('\n' + image['text'] + '\n\n' + weather)
-    imgFile = open(os.path.basename(image['url']), 'rb').read()
-    imageAttach = MIMEImage(imgFile, name=os.path.basename(image['url']))
+    img_filename = '/tmp/' + os.path.basename(image['url'])
+    imgFile = open(img_filename, 'rb').read()
+    imageAttach = MIMEImage(imgFile, name=img_filename)
     msg.attach(imageAttach)
     msg.attach(text)
     return msg
@@ -83,7 +84,8 @@ def main():
 
         # Download the image
         res = requests.get(image['url'])
-        imgFile = open(os.path.basename(image['url']), 'wb')
+        img_filename = '/tmp/' + os.path.basename(image['url'])
+        imgFile = open(img_filename, 'wb')
         for chunk in res.iter_content(100000):
             imgFile.write(chunk)
         imgFile.close()
@@ -98,7 +100,7 @@ def main():
         sendComic(username, password, message)
 
         # Delete the old image
-        os.remove(os.path.basename(image['url']))
+        os.remove(img_filename)
     except Exception as e:
         # Attempt to send a warning that everything broke
         # Set up the SMTP server
