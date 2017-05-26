@@ -3,7 +3,7 @@ from comic import get_newest_xkcd
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from sender import send_comic
+from sender import send_email
 from weather import format_weather, get_current_weather
 
 def main():
@@ -12,12 +12,18 @@ def main():
     api_key = input("API key: ")
     city_id = input("City ID: ")
 
-    xkcd_info = get_newest_xkcd()
-    weather_info = get_current_weather(api_key, city_id)
+    try:
+        xkcd_info = get_newest_xkcd()
+        weather_info = get_current_weather(api_key, city_id)
 
-    message = build_message(email_addr, xkcd_info, weather_info)
+        message = build_message(email_addr, xkcd_info, weather_info)
 
-    send_comic(email_addr, password, message)
+        raise TypeMismatchException("Cannot assign x to y")
+        send_email(email_addr, password, message)
+    except Exception as e:
+        error_message = build_error(email_addr, password, e)
+        send_email(email_addr, password, error_message)
+
 
 def build_message(email_addr, xkcd_info, weather_info):
     # Load the image to be sent
@@ -35,6 +41,22 @@ def build_message(email_addr, xkcd_info, weather_info):
     message['From'] = email_addr
     message.attach(MIMEImage(img_file))
     message.attach(MIMEText(email_body))
+
+    return message
+
+def build_error(email_addr, password, e):
+    raw_except = str(type(e))
+    idx_1 = raw_except.find('\'') + 1
+    idx_2 = raw_except.find('\'', idx_1)
+    exception_name = raw_except[idx_1:idx_2]
+
+    error_message = "A {} was caught\n".format(exception_name)
+    error_message += "Exception message: {}".format(e)
+
+    message = MIMEText(error_message)
+    message['Subject'] = "Subject: Caught a {}\n".format(exception_name)
+    message['To'] = email_addr
+    message['From'] = email_addr
 
     return message
 

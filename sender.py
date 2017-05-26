@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import smtplib
 
-def send_comic(email_addr, password, message):
+def send_email(email_addr, password, message):
     # Set up the SMTP server
     smtpObj = smtplib.SMTP('smtp.gmail.com', 587)
     smtpObj.ehlo()
