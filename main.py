@@ -13,10 +13,11 @@ def main():
     city_id = input("City ID: ")
 
     try:
-        xkcd_info = get_newest_xkcd()
-        weather_info = get_current_weather(api_key, city_id)
+        message_content = {}
+        message_content['xkcd_info'] = get_newest_xkcd()
+        message_content['weather_info'] = get_current_weather(api_key, city_id)
 
-        message = build_message(email_addr, xkcd_info, weather_info)
+        message = build_message(email_addr, message_content)
 
         send_email(email_addr, password, message)
     except Exception as e:
@@ -24,7 +25,11 @@ def main():
         send_email(email_addr, password, error_message)
 
 
-def build_message(email_addr, xkcd_info, weather_info):
+def build_message(email_addr, message_content):
+    # Unpack the message content
+    xkcd_info = message_content['xkcd_info']
+    weather_info = message_content['weather_info']
+
     # Load the image to be sent
     img_file = open(xkcd_info['img'], 'rb').read()
 
