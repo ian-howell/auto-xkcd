@@ -18,7 +18,6 @@ def main():
 
         message = build_message(email_addr, xkcd_info, weather_info)
 
-        raise TypeMismatchException("Cannot assign x to y")
         send_email(email_addr, password, message)
     except Exception as e:
         error_message = build_error(email_addr, password, e)
