@@ -19,40 +19,46 @@ def main():
 
     email = config['EMAIL']
     weather = config['WEATHER']
+    sections = config['SECTIONS']
 
-    try:
-        message_content = {}
+    message_content = {}
+    if sections['comic'] == 'on':
         message_content['xkcd_info'] = get_newest_xkcd()
+    if sections['weather'] == 'on':
         message_content['weather_info'] = get_current_weather(
             weather['api_key'], weather['city_id'])
 
-        message = build_message(email['address'], message_content)
+    message = build_message(email['address'], message_content)
+    send_email(email, message)
 
-        send_email(email['address'], email['password'], message)
-    except Exception as e:
-        error_message = build_error(email['address'], email['password'], e)
-        send_email(email['address'], email['password'], error_message)
+    # error_message = build_error(email['address'], email['password'], e)
+    # send_email(email['address'], email['password'], error_message)
 
 
 def build_message(email_addr, message_content):
-    # Unpack the message content
-    xkcd_info = message_content['xkcd_info']
-    weather_info = message_content['weather_info']
-
-    # Load the image to be sent
-    img_file = open(xkcd_info['img'], 'rb').read()
-
-    # Set up the body of the email (text)
-    formatted_weather = format_weather(weather_info)
-    email_body = "\n{}\n".format(xkcd_info['alt'])
-    email_body += "\n{}".format(formatted_weather)
-
     # Set up the email
     message = MIMEMultipart()
-    message['Subject'] = xkcd_info['title']
+    message['Subject'] = 'The Morning Report'
+
+    email_body = ''
+    if 'xkcd_info' in message_content.keys():
+        xkcd_info = message_content['xkcd_info']
+        message.replace_header('Subject', xkcd_info['title'])
+        email_body += "\n{}\n".format(xkcd_info['alt'])
+
+        # Load the image to be sent
+        img_file = open(xkcd_info['img'], 'rb').read()
+        message.attach(MIMEImage(img_file))
+
+    if 'weather_info' in message_content.keys():
+        weather_info = message_content['weather_info']
+
+        # Set up the body of the email (text)
+        formatted_weather = format_weather(weather_info)
+        email_body += "\n{}".format(formatted_weather)
+
     message['To'] = email_addr
     message['From'] = email_addr
-    message.attach(MIMEImage(img_file))
     message.attach(MIMEText(email_body))
 
     return message
