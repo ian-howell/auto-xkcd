@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 from comic import get_newest_xkcd
-from datetime import datetime
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -17,9 +16,6 @@ def main():
         message_content = {}
         message_content['xkcd_info'] = get_newest_xkcd()
         message_content['weather_info'] = get_current_weather(api_key, city_id)
-        # Days until the wedding
-        delta = datetime(2018, 6, 30) - datetime.now()
-        message_content['days_until'] = delta.days
 
         message = build_message(email_addr, message_content)
 
@@ -33,7 +29,6 @@ def build_message(email_addr, message_content):
     # Unpack the message content
     xkcd_info = message_content['xkcd_info']
     weather_info = message_content['weather_info']
-    days_until = message_content['days_until']
 
     # Load the image to be sent
     img_file = open(xkcd_info['img'], 'rb').read()
@@ -42,7 +37,6 @@ def build_message(email_addr, message_content):
     formatted_weather = format_weather(weather_info)
     email_body = "\n{}\n".format(xkcd_info['alt'])
     email_body += "\n{}".format(formatted_weather)
-    email_body += "\nThere are {} days until the wedding".format(days_until)
 
     # Set up the email
     message = MIMEMultipart()
