@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import smtplib
 
+
 def send_email(email_addr, password, message):
     # Set up the SMTP server
     smtpObj = smtplib.SMTP('smtp.gmail.com', 587)
@@ -13,4 +14,3 @@ def send_email(email_addr, password, message):
 
     # Close the SMTP connection
     smtpObj.quit()
-

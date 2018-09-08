@@ -2,6 +2,7 @@
 import json
 import requests
 
+
 def get_comic_info():
     api_string = "http://xkcd.com/info.0.json"
     res = requests.get(api_string)
@@ -13,6 +14,7 @@ def get_comic_info():
             }
     return minimal_info
 
+
 def download_comic(img):
     res = requests.get(img['img'])
     img_filename = "/tmp/" + img['title'] + '.png'
@@ -20,6 +22,7 @@ def download_comic(img):
         for chunk in res.iter_content(100000):
             img_file.write(chunk)
     return img_filename
+
 
 def get_newest_xkcd():
     xkcd_info = get_comic_info()

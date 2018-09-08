@@ -6,6 +6,7 @@ from email.mime.text import MIMEText
 from sender import send_email
 from weather import format_weather, get_current_weather
 
+
 def main():
     email_addr = input("Email address: ")
     password = input("Password: ")
@@ -48,6 +49,7 @@ def build_message(email_addr, message_content):
 
     return message
 
+
 def build_error(email_addr, password, e):
     raw_except = str(type(e))
     idx_1 = raw_except.find('\'') + 1
@@ -64,5 +66,6 @@ def build_error(email_addr, password, e):
 
     return message
 
+
 if __name__ == "__main__":
-   main()
+    main()
