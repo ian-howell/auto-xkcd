@@ -9,9 +9,13 @@ import sys
 from weather import format_weather, get_current_weather
 
 
-def main(args):
+def main():
     config = ConfigParser()
-    config.read(args[1])
+    if len(sys.argv) == 2:
+        config.read(sys.argv[1])
+    else:
+        # Use the default
+        config.read('config.ini')
 
     email = config['EMAIL']
     weather = config['WEATHER']
@@ -72,4 +76,4 @@ def build_error(email_addr, password, e):
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()
